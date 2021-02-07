@@ -5,13 +5,16 @@
     using System.Threading.Tasks;
 
     using Microsoft.AspNetCore.Components;
-
+    using Microsoft.AspNetCore.Components.Authorization;
     using Models.Categories;
     using Models.Products;
     using Models.ShoppingCarts;
 
     public partial class ProductsList
     {
+        [CascadingParameter]
+        private Task<AuthenticationState> authenticationStateTask { get; set; }
+
         private readonly ProductsSearchRequestModel model = new ProductsSearchRequestModel();
 
         private ProductsSearchResponseModel searchResponse;
@@ -77,6 +80,13 @@
 
         private async Task AddToCart(int id)
         {
+            var user = (await authenticationStateTask).User;
+            if (!user.Identity.IsAuthenticated)
+            {
+                this.NavigationManager.NavigateTo("/account/login");
+                return;
+            }
+
             var cartRequest = new ShoppingCartRequestModel
             {
                 ProductId = id,
